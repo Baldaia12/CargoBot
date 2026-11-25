@@ -14,7 +14,7 @@ source ambiente.bash
 ros2 launch trc_mapping manual.launch.py
 ```
 
-Usar uma execução do launch de cada vez. O ficheiro ambiente.bash configura o domínio ROS 42, a partição Gazebo do projeto e um perfil Fast DDS para comunicação entre os processos neste computador.
+Usar uma execução do launch de cada vez. O ficheiro ambiente.bash configura o domínio ROS 42, a partição Gazebo do projeto e seleciona o Fast DDS como implementação de comunicação do ROS 2.
 
 ## Conduzir e guardar
 

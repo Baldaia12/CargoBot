@@ -8,6 +8,5 @@ fi
 export ROS_DOMAIN_ID=42
 export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 export ROS_AUTOMATIC_DISCOVERY_RANGE=SYSTEM_DEFAULT
-export FASTRTPS_DEFAULT_PROFILES_FILE="$trc_raiz/dds-local.xml"
 export GZ_PARTITION=trc_mapping_42
 unset trc_raiz
