@@ -3,7 +3,8 @@ from pathlib import Path
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import GroupAction, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
+from launch.substitutions import LaunchConfiguration
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch_ros.actions import Node
 
@@ -20,7 +21,8 @@ def generate_launch_description():
     # A posição inicial vem de 1pioneer_building.world da Aula 2 (ângulo em graus).
     gazebo = include('simul_worlds', 'gazebo.launch.py', world='building')
     robot = include('turtlebot4_gz_bringup', 'turtlebot4_spawn.launch.py',
-                    world='building', x='7.2', y='8.9', z='0.0', yaw=str(radians(0.7)),
+                    world='building', x=LaunchConfiguration('x'), y=LaunchConfiguration('y'),
+                    z='0.0', yaw=LaunchConfiguration('yaw'),
                     use_sim_time='true', rviz='false', slam='false',
                     localization='false', nav2='false')
     # Tal como na Aula 6, o mapa é estimado apenas a partir dos sensores.
@@ -29,4 +31,9 @@ def generate_launch_description():
     viewer = Node(package='rviz2', executable='rviz2', name='rviz2',
                   parameters=[{'use_sim_time': True}],
                   arguments=['-d', str(config / 'mapping.rviz')])
-    return LaunchDescription([gazebo, robot, mapping, viewer])
+    return LaunchDescription([
+        DeclareLaunchArgument('x', default_value='7.2'),
+        DeclareLaunchArgument('y', default_value='8.9'),
+        DeclareLaunchArgument('yaw', default_value=str(radians(0.7))),
+        gazebo, robot, mapping, viewer,
+    ])

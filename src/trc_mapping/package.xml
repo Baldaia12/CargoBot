@@ -15,5 +15,11 @@
   <exec_depend>rviz2</exec_depend>
   <exec_depend>teleop_twist_keyboard</exec_depend>
   <exec_depend>nav2_map_server</exec_depend>
+  <exec_depend>nav2_bringup</exec_depend>
+  <exec_depend>explore_lite</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>lifecycle_msgs</exec_depend>
+  <exec_depend>nav_msgs</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
   <export><build_type>ament_cmake</build_type></export>
 </package>

@@ -6,6 +6,17 @@ Visualization Manager:
     Fixed Frame: map
     Background Color: 48; 48; 48
   Displays:
+    - Class: rviz_default_plugins/MarkerArray
+      Name: Fronteiras
+      Enabled: true
+      Topic:
+        Value: /explore/frontiers
+    - Class: rviz_default_plugins/Path
+      Name: Caminho Nav2
+      Enabled: true
+      Topic:
+        Value: /plan
+      Color: 25; 220; 80
     - Class: rviz_default_plugins/Map
       Name: Mapa
       Enabled: true
@@ -38,7 +49,8 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz_default_plugins/TopDownOrtho
-      Scale: 35
+      Target Frame: base_link
+      Scale: 20
       X: 0
       Y: 0
 Window Geometry:

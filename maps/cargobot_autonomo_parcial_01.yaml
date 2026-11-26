@@ -1,7 +1,7 @@
-image: cargobot_final.pgm
+image: cargobot_autonomo_parcial_01.pgm
 mode: trinary
 resolution: 0.050
-origin: [-9.808, -8.853, 0]
+origin: [-7.270, -9.076, 0]
 negate: 0
 occupied_thresh: 0.65
 free_thresh: 0.196

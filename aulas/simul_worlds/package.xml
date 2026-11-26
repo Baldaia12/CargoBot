@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>simul_worlds</name><version>3.0.0</version>
+  <description>Recursos do edifício da Aula 2; subconjunto para CargoBot.</description>
+  <author email="rprocha@isr.uc.pt">Rui P. Rocha</author>
+  <maintainer email="baldaia@todo.todo">baldaia</maintainer>
+  <license>BSD</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>ros_gz_sim</exec_depend><exec_depend>ros_gz_bridge</exec_depend>
+  <exec_depend>turtlebot4_gz_bringup</exec_depend>
+  <export><build_type>ament_cmake</build_type></export>
+</package>

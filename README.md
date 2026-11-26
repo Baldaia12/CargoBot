@@ -1,56 +1,105 @@
-# CargoBot · mapeamento manual
+# CargoBot — mapeamento manual e exploração autónoma
 
-O operador conduz um TurtleBot 4 no edifício das aulas em Gazebo Harmonic. O SLAM Toolbox combina o laser 2D com as transformações do robô e publica uma grelha de ocupação com resolução de 5 cm. O RViz mostra o modelo, o laser e o mapa em construção.
+ROS 2 Jazzy / Ubuntu 24.04 / Gazebo Harmonic. Todos os pacotes e recursos das aulas
+usados na execução estão em `aulas/`.
+As bibliotecas e ferramentas de sistema são dependentes de de instalação.
+As origens e modificações estão em `aulas/ORIGENS.md`.
 
-## Preparar e arrancar
+## Instalar dependências num computador novo
 
-Usar Bash, Ubuntu 24.04, ROS 2 Jazzy e o workspace compilado das aulas 2 e 6 (incluindo simul_worlds e o TurtleBot 4 das aulas). As outras dependências de execução estão em src/trc_mapping/package.xml. Se o workspace das aulas estiver noutro computador ou pasta, definir TRC_AULAS_WS com o caminho absoluto desse workspace antes de carregar o ambiente. Compilar uma vez após copiar o projeto.
+Instalar ROS 2 Jazzy desktop pelos procedimentos oficiais. Instalar ferramentas:
 
 ```bash
-cd /home/baldaia/Documents/RC/TRC
-source ambiente.bash
-colcon build --symlink-install --packages-select trc_mapping
+sudo apt update
+sudo apt install python3-colcon-common-extensions python3-rosdep ros-jazzy-ros-gz ros-jazzy-navigation2 ros-jazzy-nav2-bringup ros-jazzy-slam-toolbox ros-jazzy-teleop-twist-keyboard ros-jazzy-gz-ros2-control
+```
+
+Se rosdep nunca foi inicializado: `sudo rosdep init`. Depois, na raiz do projeto:
+
+```bash
+source /opt/ros/jazzy/setup.bash
+rosdep update
+rosdep install --from-paths src aulas --ignore-src -r -y --rosdistro jazzy
+colcon build --symlink-install --parallel-workers 3 --cmake-args -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=Release
+```
+
+Usar um terminal novo, sem ter carregado outros workspaces. O colcon descobre os
+pacotes de `src/` e `aulas/` recursivamente. Não limitar a primeira compilação a
+`--packages-select trc_mapping`: também é preciso construir os pacotes incluídos.
+`build/`, `install/` e `log/` são gerados localmente e não devem ser enviados ao Git.
+Ao mudar a pasta do projeto, recompilar sem reutilizar estas três pastas antigas.
+
+## Requisito 1 — mapeamento manual
+
+Na raiz do projeto:
+
+```bash
 source ambiente.bash
 ros2 launch trc_mapping manual.launch.py
 ```
 
-Usar uma execução do launch de cada vez. O ficheiro ambiente.bash configura o domínio ROS 42, a partição Gazebo do projeto e seleciona o Fast DDS como implementação de comunicação do ROS 2.
-
-## Conduzir e guardar
-
-Num segundo terminal:
+Noutro terminal na mesma pasta:
 
 ```bash
-cd /home/baldaia/Documents/RC/TRC
 source ambiente.bash
 ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true -p use_sim_time:=true -p speed:=0.2
 ```
 
-Com o foco no terminal do teclado, manter `i` premido para avançar, usar `j` e `l` para rodar e `k` para parar. O controlador trava se deixar de receber comandos. Percorrer as salas e os corredores e voltar a passar por uma zona já mapeada. No RViz, o espaço livre aparece claro, as paredes escuras e as áreas desconhecidas cinzentas.
+`i` avança, `j/l` rodam, `k` para. Manter foco no terminal. O controlador trava se
+deixar de receber comandos. Percorrer corredores e salas e revisitar áreas antigas.
+O mapa existente `maps/cargobot_final.*` foi criado manualmente pelo aluno e é preservado.
 
-Quando a cobertura for suficiente, parar com `k`, manter a simulação aberta e guardar num terceiro terminal. Cada execução deste bloco cria um prefixo datado.
+## Requisito 2 — exploração autónoma
+
+Fechar a execução manual antes de iniciar a autónoma. Num terminal novo:
 
 ```bash
-cd /home/baldaia/Documents/RC/TRC
+source ambiente.bash
+ros2 launch trc_mapping autonomous_mapping.launch.py
+```
+
+Não iniciar teleop simultaneamente. Esta execução começa com um mapa novo:
+não carrega o mapa manual. SLAM Toolbox constrói o mapa; explore_lite seleciona
+fronteiras; Nav2 planeia e conduz; velocity_smoother e collision_monitor tratam os
+comandos. O explorador só arranca com mapa, TF e todos os servidores ativos.
+RViz mostra mapa, robô, LiDAR, fronteiras e caminho planeado.
+
+Pausar a exploração (noutro terminal com source ambiente.bash):
+
+```bash
+ros2 topic pub --once /explore/resume std_msgs/msg/Bool '{data: false}'
+```
+
+Retomar: repetir com `data: true`. Ao acabar as fronteiras que consegue explorar,
+o explorador tenta regressar à posição inicial. Isso não prova cobertura total:
+fronteiras impossíveis ou sem progresso podem ser excluídas. Inspecionar o mapa
+e os logs antes de considerar o ensaio completo.
+
+## Guardar mapa (qualquer modo)
+
+Manter a simulação aberta. Na raiz, noutro terminal:
+
+```bash
 source ambiente.bash
 ros2 run nav2_map_server map_saver_cli -f "maps/cargobot_$(date +%Y%m%d_%H%M%S)" --ros-args -p use_sim_time:=true -p save_map_timeout:=15.0
 ```
 
-Guardar juntos o YAML e a imagem PGM. O par `maps/ensaio_manual.*` é uma amostra obtida ao conduzir o robô numa parte do edifício. Para fechar uma sessão iniciada por ti, usar Ctrl+C primeiro no teclado e depois no terminal do launch.
+Guardar YAML e PGM juntos. O nome datado evita sobrescrever mapas anteriores.
+Terminar com Ctrl+C no teleop, se existir, e depois no launch.
 
-## Verificação rápida
-
-Com o mesmo ambiente e a simulação em execução:
+## Verificar
 
 ```bash
-ros2 service call /slam_toolbox/get_state lifecycle_msgs/srv/GetState '{}'
-ros2 run tf2_ros tf2_echo map base_link
+source ambiente.bash
+ros2 lifecycle get /slam_toolbox
+ros2 topic echo /map --once --field header
+python3 tests/observe.py 60
 ```
 
-O serviço deve responder `active`. A segunda ferramenta imprime a pose do robô e termina com Ctrl+C. Para confirmar o resultado visual, verificar que o robô se desloca no RViz e que o mapa revela novas áreas.
+No modo autónomo verificar também `ros2 lifecycle get /bt_navigator`.
+O observador verifica mensagens, TF, movimento, objetivos Nav2 e crescimento do
+mapa. Não envia comandos. Um objetivo Nav2 com estado 4 terminou com sucesso.
 
-## Referências usadas
-
-- Aula 2, simul_worlds: launch/gazebo.launch.py, gazebo_worlds/building.sdf e a pose inicial em worlds/1pioneer_building.world. O launch deste projeto inclui o mundo e lança uma única instância do robô com a bridge ligada ao mesmo mundo.
-- Aula 6, cr_slam: launch/gazebo_slam_toolbox_1turtlebot4_building.launch.py, config/slam.yaml e config/slam.rviz. Serviram de referência para o SLAM síncrono, os frames e os displays. Os ficheiros de integração deste pacote foram escritos para este exercício.
-- Aula 8, diapositivo 3: gravação da grelha com nav2_map_server/map_saver_cli.
+`ambiente.bash` escolhe Fast DDS normal, domínio ROS 42 e partição Gazebo própria.
+Não usa perfil DDS XML personalizado. Todos os terminais devem carregar o mesmo
+ambiente. Para ensaios isolados: `export TRC_DOMAIN_ID=46` antes do source.
